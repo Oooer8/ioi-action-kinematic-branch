@@ -7,8 +7,8 @@ from ioi_action_branch.smoke import synthetic_batch
 
 
 @pytest.fixture
-def cfg():
-    return tiny_config()
+def cfg(request):
+    return tiny_config(getattr(request, "param", "action_branch"))
 
 
 @pytest.fixture

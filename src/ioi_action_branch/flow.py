@@ -16,7 +16,7 @@ def flow_matching_loss(model, batch, generator=None):
     prediction = model(
         noisy,
         sigma * 1000.0,
-        batch["actions"],
+        batch[getattr(model, "module", model).condition_key],
         batch["observation_latent"],
         batch["text_context"],
     )
@@ -27,7 +27,7 @@ def flow_matching_loss(model, batch, generator=None):
 def sample_latents(
     model,
     shape,
-    actions,
+    condition,
     observation_latent,
     text_context,
     steps=50,
@@ -41,7 +41,7 @@ def sample_latents(
     sigmas = torch.linspace(1, 0, steps + 1, device=device)
     for current, following in zip(sigmas[:-1], sigmas[1:]):
         velocity = model(
-            x, current.expand(shape[0]) * 1000.0, actions, observation_latent, text_context
+            x, current.expand(shape[0]) * 1000.0, condition, observation_latent, text_context
         )
         x = x + (following - current) * velocity
     return x

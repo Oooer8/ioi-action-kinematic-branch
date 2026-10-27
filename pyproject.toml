@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ioi-action-kinematic-branch"
-version = "0.1.0"
-description = "Raw-action conditioning through a 15-block VACE-style branch on frozen Wan2.1 1.3B"
+version = "0.2.0"
+description = "Raw-action branch and geometry/action AdaLN ablations on frozen Wan2.1 1.3B"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}

@@ -1,0 +1,18 @@
+{
+  "geometry_adaln": {
+    "backbone_frozen": 1418996800,
+    "condition_encoder": 29494880,
+    "history_encoder": 58983936,
+    "adaln_heads": 141649920,
+    "kinematic_blocks": 0,
+    "total_trainable": 230128736
+  },
+  "action_adaln": {
+    "backbone_frozen": 1418996800,
+    "condition_encoder": 2448384,
+    "history_encoder": 58983936,
+    "adaln_heads": 141649920,
+    "kinematic_blocks": 0,
+    "total_trainable": 203082240
+  }
+}

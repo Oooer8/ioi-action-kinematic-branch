@@ -84,7 +84,40 @@ def observation_positions(grid, dim, device, dtype):
     ).to(dtype)[None]
 
 
-class ActionKinematicModel(nn.Module):
+class FrozenWanAdapter(nn.Module):
+    def train(self, mode=True):
+        super().train(mode)
+        self.backbone.eval()
+        return self
+
+    def trainable_parameters(self):
+        return (p for p in self.parameters() if p.requires_grad)
+
+    def adapter_state_dict(self):
+        return {
+            k: v.detach().cpu()
+            for k, v in self.state_dict().items()
+            if not k.startswith("backbone.")
+        }
+
+    def load_adapter_state_dict(self, state):
+        expected = {k for k in self.state_dict() if not k.startswith("backbone.")}
+        if set(state) != expected:
+            raise ValueError(
+                f"Adapter keys differ: missing={sorted(expected - set(state))}, "
+                f"extra={sorted(set(state) - expected)}"
+            )
+        self.load_state_dict(state, strict=False)
+
+    def _run_block(self, block, x, kwargs):
+        if self.gradient_checkpointing and self.training and torch.is_grad_enabled():
+            return checkpoint(block, x, use_reentrant=False, **kwargs)
+        return block(x, **kwargs)
+
+
+class ActionKinematicModel(FrozenWanAdapter):
+    condition_key = "actions"
+
     def __init__(
         self,
         backbone,
@@ -133,30 +166,6 @@ class ActionKinematicModel(nn.Module):
         self.context_scale = context_scale
         self.gradient_checkpointing = gradient_checkpointing
 
-    def train(self, mode=True):
-        super().train(mode)
-        self.backbone.eval()
-        return self
-
-    def trainable_parameters(self):
-        return (p for p in self.parameters() if p.requires_grad)
-
-    def adapter_state_dict(self):
-        return {
-            k: v.detach().cpu()
-            for k, v in self.state_dict().items()
-            if not k.startswith("backbone.")
-        }
-
-    def load_adapter_state_dict(self, state):
-        expected = {k for k in self.state_dict() if not k.startswith("backbone.")}
-        if set(state) != expected:
-            raise ValueError(
-                f"Adapter keys differ: missing={sorted(expected - set(state))}, "
-                f"extra={sorted(set(state) - expected)}"
-            )
-        self.load_state_dict(state, strict=False)
-
     def parameter_counts(self):
         return {
             "backbone_frozen": sum(p.numel() for p in self.backbone.parameters()),
@@ -170,11 +179,6 @@ class ActionKinematicModel(nn.Module):
             ),
             "total_trainable": sum(p.numel() for p in self.trainable_parameters()),
         }
-
-    def _run_block(self, block, x, kwargs):
-        if self.gradient_checkpointing and self.training and torch.is_grad_enabled():
-            return checkpoint(block, x, use_reentrant=False, **kwargs)
-        return block(x, **kwargs)
 
     def forward(self, noisy_latent, timestep, actions, observation_latent, text_context):
         """All clips in a batch use the same spatial/temporal grid.
@@ -285,4 +289,12 @@ def create_model(config, pretrained=None, allow_random=False):
         raise ValueError(
             "A local Wan2.1 T2V checkpoint is required; random weights are smoke-only."
         )
-    return ActionKinematicModel(backbone, **config["branch"])
+    variant = config.get("variant", "action_branch")
+    if variant == "action_branch":
+        return ActionKinematicModel(backbone, **config["branch"])
+    if variant in ("geometry_adaln", "action_adaln"):
+        from .adaln import AdaLNModel
+
+        conditioning = "geometry" if variant == "geometry_adaln" else "action"
+        return AdaLNModel(backbone, conditioning=conditioning, **config["branch"])
+    raise ValueError(f"Unknown model variant: {variant}")

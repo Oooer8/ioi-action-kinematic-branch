@@ -54,3 +54,11 @@ attention, Euler direction, dataset validation, and epoch-boundary resume.
 Full-sized parameter counts use meta tensors. Actual pretrained 1.3B loading,
 CUDA BF16/DDP, VAE/T5 caching/decoding, full training and quality metrics need a
 target GPU environment and are not established by these CPU tests.
+
+## Geometry/action AdaLN extension
+
+See [geometry_adaln.md](geometry_adaln.md) for the new pair of AdaLN controls,
+including the paper-specified frontend and explicit reconstruction choices.
+These use a shared history readout and additive scale/shift modulation, without
+Kinematic Blocks. Their history path differs from the original branch path.
+No historical paper metric is assigned to either newly implemented baseline.

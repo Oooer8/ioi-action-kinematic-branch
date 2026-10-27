@@ -7,31 +7,40 @@ from pathlib import Path
 import torch
 from safetensors.torch import save_file
 
-from .config import tiny_config
+from .config import condition_key, tiny_config
 from .flow import flow_matching_loss, sample_latents
 from .model import create_model
 
 
 def synthetic_batch(config, batch_size=1):
     b, branch = config["backbone"], config["branch"]
-    return {
+    batch = {
         "video_latent": torch.randn(batch_size, b["in_dim"], 3, 4, 4),
         "observation_latent": torch.randn(batch_size, b["in_dim"], 2, 4, 4),
-        "actions": torch.randn(batch_size, 9, branch["action_dim"]),
         "text_context": torch.randn(batch_size, 5, b["text_dim"]),
     }
+    if condition_key(config) == "geometry_latent":
+        batch["geometry_latent"] = torch.randn(batch_size, 3, b["in_dim"], 3, 4, 4)
+    else:
+        batch["actions"] = torch.randn(batch_size, 9, branch["action_dim"])
+    return batch
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", default="runs/smoke")
     parser.add_argument("--steps", type=int, default=4)
+    parser.add_argument(
+        "--variant",
+        default="action_branch",
+        choices=["action_branch", "geometry_adaln", "action_adaln"],
+    )
     args = parser.parse_args()
     if args.steps < 3:
         raise ValueError("Use at least 3 steps to exercise both zero-initialized projections.")
     torch.set_num_threads(2)
     torch.manual_seed(22)
-    cfg, path = tiny_config(), Path(args.output)
+    cfg, path = tiny_config(args.variant), Path(args.output)
     path.mkdir(parents=True, exist_ok=True)
     model = create_model(cfg, allow_random=True).train()
     model.backbone.save_pretrained(path / "tiny_backbone")
@@ -45,9 +54,12 @@ def main():
         assert all(p.grad is None for p in model.backbone.parameters())
         optimizer.step()
         losses.append(loss.item())
-    assert any(
-        p.grad is not None and p.grad.abs().sum() > 0 for p in model.action_encoder.parameters()
-    ), "Action encoder received no gradients."
+    encoder = (
+        model.geometry_encoder if model.condition_key == "geometry_latent" else model.action_encoder
+    )
+    assert any(p.grad is not None and p.grad.abs().sum() > 0 for p in encoder.parameters()), (
+        "Condition encoder received no gradients."
+    )
     checkpoint = {"config": cfg, "adapter": model.adapter_state_dict(), "format_version": 1}
     torch.save(checkpoint, path / "adapter.pt")
     restored = create_model(cfg, pretrained=path / "tiny_backbone")
@@ -58,7 +70,7 @@ def main():
         args_forward = (
             batch["video_latent"],
             torch.tensor([500.0]),
-            batch["actions"],
+            batch[model.condition_key],
             batch["observation_latent"],
             batch["text_context"],
         )
@@ -66,7 +78,7 @@ def main():
     generated = sample_latents(
         restored,
         batch["video_latent"].shape,
-        batch["actions"],
+        batch[model.condition_key],
         batch["observation_latent"],
         batch["text_context"],
         steps=2,

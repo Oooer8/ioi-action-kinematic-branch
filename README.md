@@ -1,4 +1,4 @@
-# IOI Raw Action + 15 Kinematic Blocks
+# IOI Conditioning Ablations — Wan2.1 T2V 1.3B
 
 基于 **Wan2.1 T2V 1.3B** 和 **VACE 条件分支结构**实现的原始动作消融：
 
@@ -7,6 +7,22 @@
 分支的 cross-attention 读取观测历史；主干保留原来的文本条件。动作进入分支的 token 输入端。
 
 **这是依据论文与公开 VACE/Wan 代码重建的实验仓库。原始 IOI 源码缺失，未声称复现论文 FVD，也不保证与原实现逐项相同。** 当前验证范围是小模型 CPU 测试；真实 1.3B 权重、CUDA 训练及生成质量仍需在目标环境验证。见 [重建说明](docs/reconstruction.md)。
+
+## 新增：三视角几何 + AdaLN
+
+已加入 [实现与运行说明](docs/geometry_adaln.md)：
+
+**三视角渲染 → 冻结 VAE → view embeddings → 48→32→16 融合 → 每时间步空间读出 → AdaLN scale/shift → 冻结 Wan**
+
+| 实验 | 配置 | 可训练参数 |
+|---|---|---:|
+| 原始动作 + 15 Kinematic Blocks | `configs/wan2.1_1.3b.json` | 736,932,096 |
+| 三视角几何 + AdaLN | `configs/geometry_adaln_wan2.1_1.3b.json` | 230,128,736 |
+| 原始动作 + 同一 AdaLN 实现 | `configs/action_adaln_wan2.1_1.3b.json` | 203,082,240 |
+
+两个 AdaLN 配置共用历史编码和 15 个主干调制位置，不包含 Kinematic Blocks。
+几何到 AdaLN 的空间读出、历史条件接法属于明确记录的重建设计，不是论文已有的
+实现细节。下文原有的数据和运行示例对应第一行；几何版请按上面的专门说明运行。
 
 ## 模型配置
 

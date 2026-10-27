@@ -42,6 +42,7 @@ def test_data_validation_and_condition_only(cfg, batch, tmp_path):
         read_record(tmp_path / "bad.safetensors", cfg, require_target=False)
 
 
+@pytest.mark.parametrize("cfg", ["action_branch", "geometry_adaln", "action_adaln"], indirect=True)
 def test_training_epoch_resume_matches_uninterrupted(cfg, batch, model, tmp_path, monkeypatch):
     model.backbone.save_pretrained(tmp_path / "backbone")
     save_file(

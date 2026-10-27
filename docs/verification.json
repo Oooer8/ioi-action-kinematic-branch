@@ -8,13 +8,18 @@
     "compute": "CPU"
   },
   "checks": {
-    "pytest": "10 passed",
+    "pytest": "20 passed",
     "ruff": "passed",
     "compileall": "passed",
     "tiny_model_smoke": "passed",
     "cli_train_and_sample": "passed",
     "two_process_cpu_gloo_training": "passed",
-    "full_size_meta_parameter_count": "passed"
+    "full_size_meta_parameter_count": "passed",
+    "geometry_and_action_adaln_smoke": "passed: forward/backward/adapter roundtrip and 2-step Euler sampling",
+    "geometry_and_action_adaln_cli_train_and_sample": "passed: 2 epochs, target-free condition file, finite [4,3,4,4] output",
+    "geometry_adaln_two_process_cpu_gloo_training": "passed: 2 epochs / 2 optimizer updates",
+    "three_view_cache_pipeline": "passed with fake VAE/T5; real weights not tested",
+    "adaln_full_size_meta_parameter_counts": "passed for both variants"
   },
   "not_verified": [
     "Real pretrained Wan2.1 1.3B checkpoint loading",

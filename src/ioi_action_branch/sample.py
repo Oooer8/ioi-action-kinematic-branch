@@ -1,4 +1,4 @@
-"""Generate future latents using observed history and actions only."""
+"""Generate future latents using history and actions or rendered geometry."""
 
 import argparse
 from pathlib import Path
@@ -6,6 +6,7 @@ from pathlib import Path
 import torch
 from safetensors.torch import save_file
 
+from .config import condition_key
 from .data import read_record
 from .flow import sample_latents
 from .model import create_model
@@ -17,7 +18,7 @@ def main():
     parser.add_argument("--backbone", required=True)
     parser.add_argument("--adapter", required=True, help="Training last.pt checkpoint.")
     parser.add_argument(
-        "--condition", required=True, help="safetensors with obs/actions/T5 context."
+        "--condition", required=True, help="safetensors with history, condition, and T5 context."
     )
     parser.add_argument("--output", required=True, help="Output latent .safetensors file.")
     parser.add_argument("--steps", type=int, default=50)
@@ -36,16 +37,17 @@ def main():
     record = read_record(args.condition, cfg, require_target=False)
     # Future ground truth, even if present in an evaluation record, is never read
     # by the sampler or used to obtain its output shape.
-    act = record["actions"].unsqueeze(0).to(device)
+    key = condition_key(cfg)
+    condition = record[key].unsqueeze(0).to(device)
     obs = record["observation_latent"].unsqueeze(0).to(device)
     text = record["text_context"].unsqueeze(0).to(device)
-    stride = cfg["branch"]["action_stride"]
-    if (act.shape[1] - 1) % stride:
-        raise ValueError("Action count must be 1 modulo action_stride.")
-    frames = 1 + (act.shape[1] - 1) // stride
+    if key == "geometry_latent":
+        frames = condition.shape[3]
+    else:
+        frames = 1 + (condition.shape[1] - 1) // cfg["branch"]["action_stride"]
     shape = (1, cfg["backbone"]["out_dim"], frames, *obs.shape[-2:])
     with precision_context(device, args.precision):
-        latent = sample_latents(model, shape, act, obs, text, args.steps, args.seed)
+        latent = sample_latents(model, shape, condition, obs, text, args.steps, args.seed)
     path = Path(args.output)
     path.parent.mkdir(parents=True, exist_ok=True)
     save_file({"video_latent": latent[0].float().cpu().contiguous()}, str(path))

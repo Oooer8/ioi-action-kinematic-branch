@@ -49,8 +49,16 @@ def load_config(path):
     return cfg
 
 
-def tiny_config():
-    return {
+def condition_key(config):
+    variant = config.get("variant", "action_branch")
+    if variant not in ("action_branch", "action_adaln", "geometry_adaln"):
+        raise ValueError(f"Unknown variant: {variant}")
+    return "geometry_latent" if variant == "geometry_adaln" else "actions"
+
+
+def tiny_config(variant="action_branch"):
+    config = {
+        "variant": variant,
         "backbone": dict(TINY),
         "branch": {
             "action_dim": 14,
@@ -76,3 +84,7 @@ def tiny_config():
             "log_every": 1,
         },
     }
+    condition_key(config)
+    if variant.endswith("_adaln"):
+        config["branch"].update(latent_height=4, latent_width=4, history_latent_frames=2)
+    return config
