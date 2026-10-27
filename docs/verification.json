@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-27",
+  "environment": {
+    "python": "3.11.15",
+    "torch": "2.14.1",
+    "diffusers": "0.42.1",
+    "platform": "macOS arm64",
+    "compute": "CPU"
+  },
+  "checks": {
+    "pytest": "10 passed",
+    "ruff": "passed",
+    "compileall": "passed",
+    "tiny_model_smoke": "passed",
+    "cli_train_and_sample": "passed",
+    "two_process_cpu_gloo_training": "passed",
+    "full_size_meta_parameter_count": "passed"
+  },
+  "not_verified": [
+    "Real pretrained Wan2.1 1.3B checkpoint loading",
+    "CUDA BF16 / NCCL training",
+    "Full-scale GPU memory requirements",
+    "Optional official Wan VAE/T5 caching and video decoding",
+    "Generation quality / PSNR / SSIM / LPIPS / FVD"
+  ]
+}

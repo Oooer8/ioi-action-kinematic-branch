@@ -1,0 +1,68 @@
+{
+  "backbone": {
+    "model_type": "t2v",
+    "patch_size": [
+      1,
+      2,
+      2
+    ],
+    "text_len": 512,
+    "in_dim": 16,
+    "dim": 1536,
+    "ffn_dim": 8960,
+    "freq_dim": 256,
+    "text_dim": 4096,
+    "out_dim": 16,
+    "num_heads": 12,
+    "num_layers": 30,
+    "window_size": [
+      -1,
+      -1
+    ],
+    "qk_norm": true,
+    "cross_attn_norm": true,
+    "eps": 0.000001
+  },
+  "branch": {
+    "action_dim": 14,
+    "action_stride": 4,
+    "action_hidden_dim": 1536,
+    "injection_layers": [
+      0,
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      20,
+      22,
+      24,
+      26,
+      28
+    ],
+    "context_scale": 1,
+    "gradient_checkpointing": true
+  },
+  "training": {
+    "epochs": 50,
+    "batch_size": 1,
+    "gradient_accumulation": 4,
+    "learning_rate": 0.00005,
+    "min_learning_rate": 0.000001,
+    "warmup_steps": 500,
+    "weight_decay": 0.0001,
+    "betas": [
+      0.9,
+      0.95
+    ],
+    "max_grad_norm": 1,
+    "precision": "bfloat16",
+    "seed": 22,
+    "num_workers": 4,
+    "log_every": 10
+  }
+}

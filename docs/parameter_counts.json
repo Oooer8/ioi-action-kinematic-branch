@@ -1,0 +1,9 @@
+{
+  "backbone_frozen": 1418996800,
+  "kinematic_blocks": 696610560,
+  "input_output_projections": 37773312,
+  "action_encoder": 2448384,
+  "observation_embedding": 99840,
+  "total_trainable": 736932096,
+  "total_parameters": 2155928896
+}

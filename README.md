@@ -51,6 +51,8 @@ ioi-smoke --output runs/smoke
 
 参数统计使用 meta device，不分配完整模型存储。Smoke 使用缩小的随机 Wan 模型，不是生成质量测试。核心模型与训练使用 PyTorch SDPA，不强制安装 FlashAttention 或完整官方 Wan 包。
 
+本地验证记录见 [verification.json](docs/verification.json)。可选的 GitHub Actions 配置保存在 [github-actions-example.yml](docs/github-actions-example.yml)；需要启用时，将它放入 .github/workflows/ 目录。当前上传凭据没有 workflow 权限，因此没有自动启用远端 CI。
+
 ## 基础权重
 
 ~~~bash

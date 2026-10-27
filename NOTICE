@@ -1,0 +1,23 @@
+IOI Action Kinematic Branch
+
+This repository contains a reconstruction of an ablation discussed in
+"IOI: Decoupling Kinematics and Physics for Interactive World Models".
+The original IOI source code was not available. This is not the original release.
+
+Third-party attribution:
+- src/ioi_action_branch/_vendor/wan_model.py is vendored from
+  Wan-Video/Wan2.1, wan/modules/model.py,
+  commit 9737cba9c1c3c4d04b33fcad41c111989865d315.
+  Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
+  Licensed under Apache License 2.0. Original copyright notice retained.
+  Its attention import resolves to this repository's separately implemented
+  padding-aware PyTorch SDPA adapter.
+- Branch topology follows ali-vilab/VACE,
+  vace/models/wan/modules/model.py,
+  commit 48eb44f1c4be87cc65a98bff985a26976841e9f3.
+  Copyright Alibaba, Inc. and its affiliates.
+  Licensed under Apache License 2.0.
+  The input encoder, observation context, wrapper, training utilities, and tests
+  are implemented for this reconstruction.
+
+Pretrained weights and datasets are not included. Their original licenses apply.

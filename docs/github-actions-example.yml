@@ -1,0 +1,16 @@
+name: CPU tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[test]"
+      - run: ruff check src/ioi_action_branch tests
+      - run: pytest -q
+      - run: ioi-smoke --output /tmp/ioi-smoke
+      - run: ioi-inspect --config configs/wan2.1_1.3b.json
